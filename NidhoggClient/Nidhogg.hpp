@@ -98,6 +98,11 @@ enum SignatureSigner
 	PsProtectedSignerMax            // 9
 };
 
+enum InjectionType {
+	APCInjection,
+	NtCreateThreadExInjection
+};
+
 // *********************************************************************************************************
 
 // ** General Structures ***************************************************************************************
@@ -145,18 +150,20 @@ struct PkgReadWriteData {
 	PVOID RemoteAddress;
 };
 
+struct DllInformation {
+	InjectionType Type;
+	ULONG Pid;
+	CHAR DllPath[MAX_PATH];
+};
+
 struct ShellcodeInformation {
+	InjectionType Type;
 	ULONG Pid;
 	ULONG ShellcodeSize;
 	PVOID Shellcode;
 	PVOID Parameter1;
 	PVOID Parameter2;
 	PVOID Parameter3;
-};
-
-struct DllInformation {
-	ULONG Pid;
-	CHAR DllPath[MAX_PATH];
 };
 // *********************************************************************************************************
 
@@ -869,7 +876,7 @@ namespace Nidhogg {
 	}
 
 	namespace ModuleUtils {
-		int NidhoggInjectDll(HANDLE hNidhogg, DWORD pid, const char* dllPath) {
+		int NidhoggInjectDll(HANDLE hNidhogg, DWORD pid, const char* dllPath, InjectionType injectionType) {
 			DWORD returned;
 			DllInformation dllInformation{};
 
@@ -879,6 +886,7 @@ namespace Nidhogg {
 			if (strlen(dllPath) > MAX_PATH)
 				return NIDHOGG_GENERAL_ERROR;
 
+			dllInformation.Type = injectionType;
 			dllInformation.Pid = pid;
 			strcpy_s(dllInformation.DllPath, strlen(dllPath) + 1, dllPath);
 
@@ -890,13 +898,14 @@ namespace Nidhogg {
 			return NIDHOGG_SUCCESS;
 		}
 
-		int NidhoggInjectShellcode(HANDLE hNidhogg, DWORD pid, PVOID shellcode, ULONG shellcodeSize, PVOID parameter1, PVOID parameter2, PVOID parameter3) {
+		int NidhoggInjectShellcode(HANDLE hNidhogg, DWORD pid, PVOID shellcode, ULONG shellcodeSize, PVOID parameter1, PVOID parameter2, PVOID parameter3, InjectionType injectionType) {
 			DWORD returned;
 			ShellcodeInformation shellcodeInformation{};
 
 			if (pid <= 0 || pid == 4 || !shellcode)
 				return NIDHOGG_GENERAL_ERROR;
 
+			shellcodeInformation.Type = injectionType;
 			shellcodeInformation.Pid = pid;
 			shellcodeInformation.ShellcodeSize = shellcodeSize;
 			shellcodeInformation.Shellcode = shellcode;
