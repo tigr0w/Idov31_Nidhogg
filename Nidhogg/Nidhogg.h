@@ -5,7 +5,7 @@
 #include "ProcessUtils.hpp"
 #include "FileUtils.hpp"
 #include "RegistryUtils.hpp"
-#include "ModuleUtils.hpp"
+#include "MemoryUtils.hpp"
 #include "NidhoggDeviceControl.hpp"
 
 // Definitions.
